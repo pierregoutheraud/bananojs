@@ -1,5 +1,5 @@
 //bananocoin-bananojs.js
-//version 2.4.18
+//version 2.4.19
 //license MIT
 const require = (modname) => {
   if (typeof BigInt === 'undefined') {
@@ -2439,6 +2439,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     const formData = {
       action: 'work_generate',
       hash: hash,
+      use_peers: true
     };
 
     /* istanbul ignore if */
@@ -4900,6 +4901,8 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
 })();
 // FINISHED BOTTOM nodejs/browser hack
 'use strict';
+
+// HTTPETE VERSION
 
 // STARTED TOP nodejs/browser hack
 (function() {

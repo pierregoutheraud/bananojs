@@ -1,5 +1,7 @@
 'use strict';
 
+// HTTPETE VERSION
+
 // STARTED TOP nodejs/browser hack
 (function() {
 // FINISHED TOP nodejs/browser hack
