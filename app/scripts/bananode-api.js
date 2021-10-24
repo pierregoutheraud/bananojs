@@ -337,6 +337,7 @@
     const formData = {
       action: 'work_generate',
       hash: hash,
+      use_peers: true
     };
 
     /* istanbul ignore if */
