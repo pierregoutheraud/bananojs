@@ -184,9 +184,9 @@
    * @param {string} previousHash the previous hash (optional).
    * @return {Promise<string>} returns the hash returned by the send.
    */
-  const sendAmountToBananoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash) => {
+  const sendAmountToBananoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash, workParams = {}) => {
     const privateKey = bananoUtil.getPrivateKey(seed, seedIx);
-    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, BANANO_PREFIX);
+    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, BANANO_PREFIX, workParams);
     return hash;
   };
 
@@ -206,9 +206,9 @@
    * @param {string} previousHash the previous hash (optional).
    * @return {Promise<string>} returns the hash returned by the send.
    */
-  const sendAmountToNanoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash) => {
+  const sendAmountToNanoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash, workParams = {}) => {
     const privateKey = bananoUtil.getPrivateKey(seed, seedIx);
-    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, NANO_PREFIX);
+    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, NANO_PREFIX, workParams);
     return hash;
   };
 
@@ -223,8 +223,8 @@
  * @param {string} failureCallback the callback to call upon failure.
  * @return {Promise<string>} returns the hash returned by the send.
  */
-  const sendAmountToBananoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback) => {
-    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, BANANO_PREFIX)
+  const sendAmountToBananoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, workParams = {}) => {
+    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, BANANO_PREFIX, workParams)
         .catch((error) => {
         // console.trace(error);
           throw Error(error);
@@ -242,8 +242,8 @@
  * @param {string} failureCallback the callback to call upon failure.
  * @return {Promise<string>} returns the hash returned by the send.
  */
-  const sendAmountToNanoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback) => {
-    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, NANO_PREFIX)
+  const sendAmountToNanoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, workParams = {}) => {
+    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, NANO_PREFIX, workParams)
         .catch((error) => {
         // console.trace(error);
           throw Error(error);
@@ -286,12 +286,13 @@
    * @param {string} representative the representative.
    * @param {string} specificPendingBlockHash a specific block hash to receive (optional).
    * @return {Promise<object>} returns the response returned by the receive.
+   * @return {object} work_generate param.
    */
-  const receiveNanoDepositsForSeed = async (seed, seedIx, representative, specificPendingBlockHash) => {
+  const receiveNanoDepositsForSeed = async (seed, seedIx, representative, specificPendingBlockHash, workParams = {}) => {
     const privateKey = bananoUtil.getPrivateKey(seed, seedIx);
     const publicKey = await bananoUtil.getPublicKey(privateKey);
     const account = bananoUtil.getAccount(publicKey, NANO_PREFIX);
-    const response = await depositUtil.receive(loggingUtil, bananodeApi, account, privateKey, representative, specificPendingBlockHash, NANO_PREFIX);
+    const response = await depositUtil.receive(loggingUtil, bananodeApi, account, privateKey, representative, specificPendingBlockHash, NANO_PREFIX, workParams);
     return response;
   };
 
@@ -304,11 +305,11 @@
    * @param {string} specificPendingBlockHash a specific block hash to receive (optional).
    * @return {Promise<object>} returns the response returned by the receive.
    */
-  const receiveBananoDepositsForSeed = async (seed, seedIx, representative, specificPendingBlockHash) => {
+  const receiveBananoDepositsForSeed = async (seed, seedIx, representative, specificPendingBlockHash, workParams = {}) => {
     const privateKey = bananoUtil.getPrivateKey(seed, seedIx);
     const publicKey = await bananoUtil.getPublicKey(privateKey);
     const account = bananoUtil.getAccount(publicKey, BANANO_PREFIX);
-    const response = await depositUtil.receive(loggingUtil, bananodeApi, account, privateKey, representative, specificPendingBlockHash, BANANO_PREFIX);
+    const response = await depositUtil.receive(loggingUtil, bananodeApi, account, privateKey, representative, specificPendingBlockHash, BANANO_PREFIX, workParams);
     return response;
   };
 

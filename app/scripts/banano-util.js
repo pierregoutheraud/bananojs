@@ -661,7 +661,7 @@
     return bytesToHex(accountBytes);
   };
 
-  const send = async (bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, accountPrefix) => {
+  const send = async (bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, accountPrefix, workParams = {}) => {
   /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -703,7 +703,7 @@
     if (LOG_SEND) {
       console.log(`INTERIM send ${seed} ${seedIx} ${privateKey}`);
     }
-    await sendFromPrivateKey(bananodeApi, privateKey, destAccount, amountRaw, accountPrefix)
+    await sendFromPrivateKey(bananodeApi, privateKey, destAccount, amountRaw, accountPrefix, workParams)
         .then((hash) => {
           /* istanbul ignore if */
           if (LOG_SEND) {
@@ -720,7 +720,7 @@
         });
   };
 
-  const sendFromPrivateKey = async (bananodeApi, privateKey, destAccount, amountRaw, accountPrefix) => {
+  const sendFromPrivateKey = async (bananodeApi, privateKey, destAccount, amountRaw, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -741,10 +741,10 @@
     if (accountPrefix === undefined) {
       throw Error('accountPrefix is a required parameter.');
     }
-    return await sendFromPrivateKeyWithRepresentative(bananodeApi, privateKey, destAccount, amountRaw, undefined, accountPrefix);
+    return await sendFromPrivateKeyWithRepresentative(bananodeApi, privateKey, destAccount, amountRaw, undefined, accountPrefix, workParams);
   };
 
-  const sendFromPrivateKeyWithRepresentative = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, accountPrefix) => {
+  const sendFromPrivateKeyWithRepresentative = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -765,10 +765,10 @@
     if (accountPrefix === undefined) {
       throw Error('accountPrefix is a required parameter.');
     }
-    return await sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, undefined, accountPrefix);
+    return await sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, undefined, accountPrefix, workParams);
   };
 
-  const sendFromPrivateKeyWithRepresentativeAndPrevious = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, newPrevious, accountPrefix) => {
+  const sendFromPrivateKeyWithRepresentativeAndPrevious = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, newPrevious, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -889,7 +889,7 @@
       block.previous = previous;
       block.representative = representative;
       block.balance = remainingDecimal;
-      const work = await bananodeApi.getGeneratedWork(previous);
+      const work = await bananodeApi.getGeneratedWork(previous, workParams);
       block.work = work;
       /* istanbul ignore if */
       if (LOG_SEND) {
@@ -923,8 +923,8 @@
     }
   };
 
-  const open = async (bananodeApi, privateKey, publicKey, representative, pending, pendingValueRaw, accountPrefix) => {
-    const work = await bananodeApi.getGeneratedWork(publicKey);
+  const open = async (bananodeApi, privateKey, publicKey, representative, pending, pendingValueRaw, accountPrefix, workParams = {}) => {
+    const work = await bananodeApi.getGeneratedWork(publicKey, workParams);
     const accountAddress = getAccount(publicKey, accountPrefix);
     const block = {};
     block.type = 'state';
@@ -954,7 +954,7 @@
     }
   };
 
-  const change = async (bananodeApi, privateKey, representative, accountPrefix) => {
+  const change = async (bananodeApi, privateKey, representative, accountPrefix, workParams = {}) => {
   /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -975,7 +975,7 @@
       throw Error(`The server's account info cannot be retrieved, please try again.`);
     }
     const previous = accountInfo.frontier;
-    const work = await bananodeApi.getGeneratedWork(previous);
+    const work = await bananodeApi.getGeneratedWork(previous, workParams);
     const balanceRaw = accountInfo.balance;
 
 
@@ -1019,7 +1019,7 @@
     }
   };
 
-  const receive = async (bananodeApi, privateKey, publicKey, representative, previous, hash, valueRaw, accountPrefix) => {
+  const receive = async (bananodeApi, privateKey, publicKey, representative, previous, hash, valueRaw, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -1048,7 +1048,7 @@
     if (valueRaw === undefined) {
       throw Error('valueRaw is a required parameter.');
     }
-    const work = await bananodeApi.getGeneratedWork(previous);
+    const work = await bananodeApi.getGeneratedWork(previous, workParams);
     const accountAddress = getAccount(publicKey, accountPrefix);
 
     const block = {};

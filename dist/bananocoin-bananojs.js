@@ -1,5 +1,5 @@
 //bananocoin-bananojs.js
-//version 2.4.23
+//version 2.4.24
 //license MIT
 const require = (modname) => {
   if (typeof BigInt === 'undefined') {
@@ -2452,11 +2452,23 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     });
   };
 
-  const getGeneratedWork = async (hash) => {
-  // https://docs.nano.org/commands/rpc-protocol#work-generate
+  const getGeneratedWork = async (
+    hash,
+    {
+      difficulty = undefined,
+      multiplier = undefined,
+      version = undefined,
+      use_peers = false,
+    } = {}
+  ) => {
+    // https://docs.nano.org/commands/rpc-protocol#work-generate
     const formData = {
       action: 'work_generate',
       hash: hash,
+      difficulty,
+      multiplier,
+      version,
+      use_peers,
     };
 
     /* istanbul ignore if */
@@ -3364,7 +3376,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     return bytesToHex(accountBytes);
   };
 
-  const send = async (bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, accountPrefix) => {
+  const send = async (bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, accountPrefix, workParams = {}) => {
   /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -3406,7 +3418,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     if (LOG_SEND) {
       console.log(`INTERIM send ${seed} ${seedIx} ${privateKey}`);
     }
-    await sendFromPrivateKey(bananodeApi, privateKey, destAccount, amountRaw, accountPrefix)
+    await sendFromPrivateKey(bananodeApi, privateKey, destAccount, amountRaw, accountPrefix, workParams)
         .then((hash) => {
           /* istanbul ignore if */
           if (LOG_SEND) {
@@ -3423,7 +3435,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
         });
   };
 
-  const sendFromPrivateKey = async (bananodeApi, privateKey, destAccount, amountRaw, accountPrefix) => {
+  const sendFromPrivateKey = async (bananodeApi, privateKey, destAccount, amountRaw, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -3444,10 +3456,10 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     if (accountPrefix === undefined) {
       throw Error('accountPrefix is a required parameter.');
     }
-    return await sendFromPrivateKeyWithRepresentative(bananodeApi, privateKey, destAccount, amountRaw, undefined, accountPrefix);
+    return await sendFromPrivateKeyWithRepresentative(bananodeApi, privateKey, destAccount, amountRaw, undefined, accountPrefix, workParams);
   };
 
-  const sendFromPrivateKeyWithRepresentative = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, accountPrefix) => {
+  const sendFromPrivateKeyWithRepresentative = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -3468,10 +3480,10 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     if (accountPrefix === undefined) {
       throw Error('accountPrefix is a required parameter.');
     }
-    return await sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, undefined, accountPrefix);
+    return await sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, undefined, accountPrefix, workParams);
   };
 
-  const sendFromPrivateKeyWithRepresentativeAndPrevious = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, newPrevious, accountPrefix) => {
+  const sendFromPrivateKeyWithRepresentativeAndPrevious = async (bananodeApi, privateKey, destAccount, amountRaw, newRepresentative, newPrevious, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -3592,7 +3604,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
       block.previous = previous;
       block.representative = representative;
       block.balance = remainingDecimal;
-      const work = await bananodeApi.getGeneratedWork(previous);
+      const work = await bananodeApi.getGeneratedWork(previous, workParams);
       block.work = work;
       /* istanbul ignore if */
       if (LOG_SEND) {
@@ -3626,8 +3638,8 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     }
   };
 
-  const open = async (bananodeApi, privateKey, publicKey, representative, pending, pendingValueRaw, accountPrefix) => {
-    const work = await bananodeApi.getGeneratedWork(publicKey);
+  const open = async (bananodeApi, privateKey, publicKey, representative, pending, pendingValueRaw, accountPrefix, workParams = {}) => {
+    const work = await bananodeApi.getGeneratedWork(publicKey, workParams);
     const accountAddress = getAccount(publicKey, accountPrefix);
     const block = {};
     block.type = 'state';
@@ -3657,7 +3669,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     }
   };
 
-  const change = async (bananodeApi, privateKey, representative, accountPrefix) => {
+  const change = async (bananodeApi, privateKey, representative, accountPrefix, workParams = {}) => {
   /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -3678,7 +3690,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
       throw Error(`The server's account info cannot be retrieved, please try again.`);
     }
     const previous = accountInfo.frontier;
-    const work = await bananodeApi.getGeneratedWork(previous);
+    const work = await bananodeApi.getGeneratedWork(previous, workParams);
     const balanceRaw = accountInfo.balance;
 
 
@@ -3722,7 +3734,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     }
   };
 
-  const receive = async (bananodeApi, privateKey, publicKey, representative, previous, hash, valueRaw, accountPrefix) => {
+  const receive = async (bananodeApi, privateKey, publicKey, representative, previous, hash, valueRaw, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (bananodeApi === undefined) {
       throw Error('bananodeApi is a required parameter.');
@@ -3751,7 +3763,7 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
     if (valueRaw === undefined) {
       throw Error('valueRaw is a required parameter.');
     }
-    const work = await bananodeApi.getGeneratedWork(previous);
+    const work = await bananodeApi.getGeneratedWork(previous, workParams);
     const accountAddress = getAccount(publicKey, accountPrefix);
 
     const block = {};
@@ -5104,9 +5116,9 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
    * @param {string} previousHash the previous hash (optional).
    * @return {Promise<string>} returns the hash returned by the send.
    */
-  const sendAmountToBananoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash) => {
+  const sendAmountToBananoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash, workParams = {}) => {
     const privateKey = bananoUtil.getPrivateKey(seed, seedIx);
-    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, BANANO_PREFIX);
+    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, BANANO_PREFIX, workParams);
     return hash;
   };
 
@@ -5126,9 +5138,9 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
    * @param {string} previousHash the previous hash (optional).
    * @return {Promise<string>} returns the hash returned by the send.
    */
-  const sendAmountToNanoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash) => {
+  const sendAmountToNanoAccountWithRepresentativeAndPrevious = async (seed, seedIx, destAccount, amountRaw, representative, previousHash, workParams = {}) => {
     const privateKey = bananoUtil.getPrivateKey(seed, seedIx);
-    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, NANO_PREFIX);
+    const hash = await bananoUtil.sendFromPrivateKeyWithRepresentativeAndPrevious(bananodeApi, privateKey, destAccount, amountRaw, representative, previousHash, NANO_PREFIX, workParams);
     return hash;
   };
 
@@ -5143,8 +5155,8 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
  * @param {string} failureCallback the callback to call upon failure.
  * @return {Promise<string>} returns the hash returned by the send.
  */
-  const sendAmountToBananoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback) => {
-    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, BANANO_PREFIX)
+  const sendAmountToBananoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, workParams = {}) => {
+    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, BANANO_PREFIX, workParams)
         .catch((error) => {
         // console.trace(error);
           throw Error(error);
@@ -5162,8 +5174,8 @@ window.bananocoin.bananojs.https.request = (requestOptions, requestWriterCallbac
  * @param {string} failureCallback the callback to call upon failure.
  * @return {Promise<string>} returns the hash returned by the send.
  */
-  const sendAmountToNanoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback) => {
-    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, NANO_PREFIX)
+  const sendAmountToNanoAccount = async (seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, workParams = {}) => {
+    return await bananoUtil.send(bananodeApi, seed, seedIx, destAccount, amountRaw, successCallback, failureCallback, NANO_PREFIX, workParams)
         .catch((error) => {
         // console.trace(error);
           throw Error(error);

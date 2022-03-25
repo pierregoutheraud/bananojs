@@ -350,11 +350,23 @@
     });
   };
 
-  const getGeneratedWork = async (hash) => {
-  // https://docs.nano.org/commands/rpc-protocol#work-generate
+  const getGeneratedWork = async (
+    hash,
+    {
+      difficulty = undefined,
+      multiplier = undefined,
+      version = undefined,
+      use_peers = false,
+    } = {}
+  ) => {
+    // https://docs.nano.org/commands/rpc-protocol#work-generate
     const formData = {
       action: 'work_generate',
       hash: hash,
+      difficulty,
+      multiplier,
+      version,
+      use_peers,
     };
 
     /* istanbul ignore if */

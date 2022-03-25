@@ -10,7 +10,7 @@
 
   const LOG_SWEEP = false;
 
-  const receive = async (loggingUtil, bananodeApi, account, privateKey, representative, specificPendingBlockHash, accountPrefix) => {
+  const receive = async (loggingUtil, bananodeApi, account, privateKey, representative, specificPendingBlockHash, accountPrefix, workParams = {}) => {
   /* istanbul ignore if */
     if (loggingUtil === undefined) {
       throw Error('loggingUtil is required.');
@@ -57,7 +57,7 @@
         loggingUtil.log('INTERIM receive pendingHashes', pendingHashes);
       }
       if (pendingHashes.length > 0) {
-        const sweepBlocks = await sweep(loggingUtil, bananodeApi, privateKey, representative, specificPendingBlockHash, accountPrefix);
+        const sweepBlocks = await sweep(loggingUtil, bananodeApi, privateKey, representative, specificPendingBlockHash, accountPrefix, workParams);
         response.receiveMessage = `received ${sweepBlocks.length} blocks.`;
         response.receiveCount = sweepBlocks.length;
         response.receiveBlocks = sweepBlocks;
@@ -73,7 +73,7 @@
   };
 
 
-  const sweep = async (loggingUtil, bananodeApi, privateKey, representative, specificPendingBlockHash, accountPrefix) => {
+  const sweep = async (loggingUtil, bananodeApi, privateKey, representative, specificPendingBlockHash, accountPrefix, workParams = {}) => {
     /* istanbul ignore if */
     if (LOG_SWEEP) {
       loggingUtil.log('STARTED sweep');
@@ -112,7 +112,7 @@
             if (LOG_SWEEP) {
               loggingUtil.log(`INTERIM STARTED sweep openBlockHash pending`, pending);
             }
-            const openBlockHash = await bananoUtil.open(bananodeApi, privateKey, publicKey, account, pending, pendingValueRaw, accountPrefix);
+            const openBlockHash = await bananoUtil.open(bananodeApi, privateKey, publicKey, account, pending, pendingValueRaw, accountPrefix, workParams);
             /* istanbul ignore if */
             if (LOG_SWEEP) {
               loggingUtil.log(`INTERIM SUCCESS sweep openBlockHash`, account, openBlockHash);
@@ -124,7 +124,7 @@
             const previous = frontiers.frontiers[account];
             const hash = pendingBlockHash;
             const valueRaw = pendingValueRaw;
-            const receiveBlockHash = await bananoUtil.receive(bananodeApi, privateKey, publicKey, representative, previous, hash, valueRaw, accountPrefix);
+            const receiveBlockHash = await bananoUtil.receive(bananodeApi, privateKey, publicKey, representative, previous, hash, valueRaw, accountPrefix, workParams);
             /* istanbul ignore if */
             if (LOG_SWEEP) {
               loggingUtil.log(`INTERIM sweep receiveBlockHash`, account, receiveBlockHash);
